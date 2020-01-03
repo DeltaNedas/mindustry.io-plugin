@@ -1,19 +1,19 @@
 apply plugin: "java"
 apply plugin: "maven"
 
-version '0.1'
+version "0.1"
 
 sourceCompatibility = 1.8
 
 repositories{
     mavenCentral()
-    maven{ url 'https://jitpack.io' }
+    maven{ url "https://jitpack.io" }
 }
 
 ext{
     //the build number that this plugin is made for
-    mindustryVersion = '496677725e' // v100 doesn't seem to exist on gitpack, use this for now
-    arcVersion = 'v100'
+    mindustryVersion = "5f3c10e3978de22a1392d09468c9ec32db0085e4"
+    arcVersion = "b3d3fc19560148f16b58ac7e04903f9db4f56912"
 }
 
 dependencies{
@@ -22,9 +22,9 @@ dependencies{
     compileOnly "com.github.Anuken.Mindustry:core:$mindustryVersion"
     compileOnly "com.github.Anuken.Mindustry:server:$mindustryVersion"
 
-    compile group: 'org.json', name: 'json', version: '20190722'
-    //javacord
-    implementation 'org.javacord:javacord:3.0.4'
+    compile group: "com.googlecode.json-simple", name: "json-simple", version: "1.1.1"
+
+    implementation "org.javacord:javacord:3.0.4"
 }
 
 jar{
@@ -34,4 +34,4 @@ jar{
     }
 }
 
-compileJava.options.encoding = 'UTF-8'
+compileJava.options.encoding = "UTF-8"

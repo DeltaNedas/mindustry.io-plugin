@@ -28,8 +28,8 @@ desktop-sdl/build/
 /core/assets/gifexport/
 /core/assets/version.properties
 /core/assets/locales
-/ios/src/io/anuke/mindustry/gen/
-/core/src/io/anuke/mindustry/gen/
+/ios/src/mindustry/gen/
+/core/src/mindustry/gen/
 ios/robovm.properties
 packr-out/
 config/

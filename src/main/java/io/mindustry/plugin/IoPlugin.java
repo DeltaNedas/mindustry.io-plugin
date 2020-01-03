@@ -1,32 +1,27 @@
 package mindustry.plugin;
 
-import java.awt.Color;
-import java.text.SimpleDateFormat;
+import arc.*;
+import arc.util.*;
+import mindustry.*;
+import mindustry.content.*;
+import mindustry.entities.type.*;
+import mindustry.game.*;
+import mindustry.gen.*;
+import mindustry.world.*;
+import org.javacord.api.*;
+import org.javacord.api.entity.channel.*;
+import org.javacord.api.entity.message.*;
+import org.javacord.api.entity.message.embed.*;
+import org.javacord.api.entity.permission.*;
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+
+import java.awt.*;
+import java.io.IOException;
+import java.text.*;
 import java.util.*;
 
-import mindustry.world.Block;
-import org.javacord.api.DiscordApi;
-import org.javacord.api.DiscordApiBuilder;
-import org.javacord.api.entity.channel.Channel;
-import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.javacord.api.entity.permission.Role;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import arc.Core;
-import arc.Events;
-import arc.util.CommandHandler;
-import arc.util.Log;
-import arc.util.Strings;
-import mindustry.Vars;
-import mindustry.content.Blocks;
-import mindustry.entities.type.Player;
-import mindustry.game.EventType;
-import mindustry.gen.Call;
-import mindustry.world.Tile;
-
+import static mindustry.content.Bullets.arc;
 import static mindustry.Vars.*;
 
 public class IoPlugin extends Plugin {
@@ -41,13 +36,13 @@ public class IoPlugin extends Plugin {
     public IoPlugin() throws InterruptedException {
         try {
             String pureJson = Core.settings.getDataDirectory().child("mods/settings.json").readString();
-            alldata = new JSONObject(new JSONTokener(pureJson));
-            if (!alldata.has("in-game")){
+            alldata = (JSONObject) new JSONParser().parse(pureJson);
+            if (!alldata.containsKey("in-game")){
                 Log.err("[ERR!] discordplugin: settings.json has an invalid format!\n");
                 //this.makeSettingsFile("settings.json");
                 return;
             } else {
-                data = alldata.getJSONObject("in-game");
+                data = (JSONObject) alldata.get("in-game");
             }
         } catch (Exception e) {
             if (e.getMessage().contains(fileNotFoundErrorMessage)){
@@ -61,7 +56,7 @@ public class IoPlugin extends Plugin {
             }
         }
         try {
-            api = new DiscordApiBuilder().setToken(alldata.getString("token")).login().join();
+            api = new DiscordApiBuilder().setToken((String) alldata.get("token")).login().join();
         }catch (Exception e){
             if (e.getMessage().contains("READY packet")){
                 Log.err("\n[ERR!] discordplugin: invalid token.\n");
@@ -69,13 +64,13 @@ public class IoPlugin extends Plugin {
                 e.printStackTrace();
             }
         }
-        BotThread bt = new BotThread(api, Thread.currentThread(), alldata.getJSONObject("discord"));
+        BotThread bt = new BotThread(api, Thread.currentThread(), (JSONObject) alldata.get("discord"));
         bt.setDaemon(false);
         bt.start();
 
         // live chat
-        if (data.has("live_chat_channel_id")) {
-            TextChannel tc = getTextChannel(data.getString("live_chat_channel_id"));
+        if (data.containsKey("live_chat_channel_id")) {
+            TextChannel tc = getTextChannel((String) data.get("live_chat_channel_id"));
             if (tc != null) {
                 HashMap<String, String> messageBuffer = new HashMap<>();
                 Events.on(EventType.PlayerChatEvent.class, event -> {
@@ -118,7 +113,7 @@ public class IoPlugin extends Plugin {
                 Log.info("Caught a nuker, but not preventing since anti nuke is off.");
             }
         });
-        
+
         Events.on(EventType.PlayerConnect.class, player ->{
             TempBan.update();//updates tempban list
             for(String i : TempBan.getBanArrayList()){//checks if connecting player is in tempban list
@@ -126,8 +121,8 @@ public class IoPlugin extends Plugin {
             }
             });
 
-        if (data.has("warnings_chat_channel_id")) {
-            TextChannel tc = this.getTextChannel(data.getString("warnings_chat_channel_id"));
+        if (data.containsKey("warnings_chat_channel_id")) {
+            TextChannel tc = this.getTextChannel((String) data.get("warnings_chat_channel_id"));
             if (tc != null) {
                 Events.on(EventType.WaveEvent.class, event -> {
                     EmbedBuilder eb = new EmbedBuilder().setTitle("Wave " + state.wave + " started.");
@@ -170,10 +165,10 @@ public class IoPlugin extends Plugin {
         if (api != null) {
             handler.<Player>register("d", "<text...>", "Sends a message to moderators. (Use when a griefer is online)", (args, player) -> {
 
-                if (!data.has("dchannel_id")) {
+                if (!data.containsKey("dchannel_id")) {
                     player.sendMessage("[scarlet]This command is disabled.");
                 } else {
-                    TextChannel tc = this.getTextChannel(data.getString("dchannel_id"));
+                    TextChannel tc = this.getTextChannel((String) data.get("dchannel_id"));
                     if (tc == null) {
                         player.sendMessage("[scarlet]This command is disabled.");
                         return;
@@ -199,8 +194,8 @@ public class IoPlugin extends Plugin {
             });
 
             handler.<Player>register("gr", "<player> <reason...>", "Report a griefer by id (use '/gr' to get a list of ids)", (args, player) -> {
-                //https://github.com/Anuken/Mindustry/blob/master/core/src/io/anuke/mindustry/core/NetServer.java#L300-L351
-                if (!(data.has("channel_id") && data.has("role_id"))) {
+                //https://github.com/Anuken/Mindustry/blob/master/core/src/mindustry/core/NetServer.java#L300-L351
+                if (!(data.containsKey("channel_id") && data.containsKey("role_id"))) {
                     player.sendMessage("[scarlet]This command is disabled.");
                     return;
                 }
@@ -252,8 +247,8 @@ public class IoPlugin extends Plugin {
                         } else if (found.getTeam() != player.getTeam()) {
                             player.sendMessage("[scarlet]Only players on your team can be reported.");
                         } else {
-                            TextChannel tc = this.getTextChannel(data.getString("channel_id"));
-                            Role r = this.getRole(data.getString("role_id"));
+                            TextChannel tc = this.getTextChannel((String) data.get("channel_id"));
+                            Role r = this.getRole((String) data.get("role_id"));
                             if (tc == null || r == null) {
                                 player.sendMessage("[scarlet]This command is disabled.");
                                 return;

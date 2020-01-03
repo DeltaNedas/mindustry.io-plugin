@@ -4,7 +4,7 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.permission.Role;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 
 import mindustry.plugin.discordcommands.DiscordCommands;
 
@@ -34,16 +34,16 @@ public class BotThread extends Thread {
 
             }
         }
-        if (data.has("serverdown_role_id")){
-            Role r = new UtilMethods().getRole(api, data.getString("serverdown_role_id"));
-            TextChannel tc = new UtilMethods().getTextChannel(api, data.getString("serverdown_channel_id"));
+        if (data.containsKey("serverdown_role_id")){
+            Role r = new UtilMethods().getRole(api, (String) data.get("serverdown_role_id"));
+            TextChannel tc = new UtilMethods().getTextChannel(api, (String) data.get("serverdown_channel_id"));
             if (r == null || tc ==  null) {
                 try {
                     Thread.sleep(1000);
                 } catch (Exception e) {}
             } else {
-                if (data.has("serverdown_name")){
-                    String serverNaam = data.getString("serverdown_name");
+                if (data.containsKey("serverdown_name")){
+                    String serverNaam = (String) data.get("serverdown_name");
                     new MessageBuilder()
                             .append(String.format("%s\nServer %s is down",r.getMentionTag(),((serverNaam != "") ? ("**"+serverNaam+"**") : "")))
                             .send(tc);
